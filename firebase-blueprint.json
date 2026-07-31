@@ -1,0 +1,66 @@
+{
+  "entities": {
+    "users": {
+      "title": "Users",
+      "description": "User profile collection storing roles (landlord, customer, admin) and contact details.",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth user ID" },
+        "name": { "type": "string", "description": "Full name" },
+        "email": { "type": "string", "description": "User email address" },
+        "phone": { "type": "string", "description": "User phone number" },
+        "role": { "type": "string", "enum": ["landlord", "customer", "admin"], "description": "Role of the user" },
+        "companyName": { "type": "string", "description": "Company name for agents/landlords" },
+        "verifiedAgent": { "type": "boolean", "description": "Verification status" },
+        "avatar": { "type": "string", "description": "Avatar image URL" },
+        "createdAt": { "type": "string", "description": "ISO timestamp" }
+      },
+      "required": ["uid", "name", "email", "role"]
+    },
+    "properties": {
+      "title": "Properties",
+      "description": "Real estate properties created by landlords and managed by admins.",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "period": { "type": "string" },
+        "type": { "type": "string" },
+        "propertyType": { "type": "string" },
+        "state": { "type": "string" },
+        "city": { "type": "string" },
+        "area": { "type": "string" },
+        "bedrooms": { "type": "number" },
+        "bathrooms": { "type": "number" },
+        "squareMeters": { "type": "number" },
+        "furnished": { "type": "boolean" },
+        "verified": { "type": "boolean" },
+        "featured": { "type": "boolean" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "amenities": { "type": "array", "items": { "type": "string" } },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "approved": { "type": "boolean" }
+      },
+      "required": ["title", "price", "ownerUid"]
+    },
+    "bookings": {
+      "title": "Bookings",
+      "description": "Property rental and booking records created by customers.",
+      "properties": {
+        "id": { "type": "string" },
+        "propertyId": { "type": "string" },
+        "propertyTitle": { "type": "string" },
+        "customerUid": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerEmail": { "type": "string" },
+        "landlordUid": { "type": "string" },
+        "startDate": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected", "cancelled"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["propertyId", "customerUid", "landlordUid"]
+    }
+  }
+}

@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isSuperAdmin() {
+      return request.auth != null && request.auth.token.email == "aaronayemusa@gmail.com";
+    }
+
+    function isAdmin() {
+      return request.auth != null && (
+        isSuperAdmin() ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin")
+      );
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update, delete: if request.auth != null && (request.auth.uid == userId || isAdmin());
+    }
+
+    // Properties collection
+    match /properties/{propertyId} {
+      allow read: if true; // Public property listings read
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && (
+        resource.data.ownerUid == request.auth.uid || 
+        resource.data.agent.id == request.auth.uid ||
+        isAdmin()
+      );
+    }
+
+    // Bookings collection
+    match /bookings/{bookingId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && (
+        resource.data.customerUid == request.auth.uid ||
+        resource.data.landlordUid == request.auth.uid ||
+        isAdmin()
+      );
+    }
+
+    // Default fallback
+    match /{document=**} {
+      allow read, write: if request.auth != null && isAdmin();
+    }
+  }
+}

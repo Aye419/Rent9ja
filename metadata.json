@@ -1,0 +1,6 @@
+{
+  "name": "RentNaija",
+  "description": "World-class property marketplace for renting, buying, and listing properties in Nigeria, featuring smart search, calculators, and AI assistance.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
