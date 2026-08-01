@@ -170,12 +170,6 @@ export default function LoginModal({
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 h-10 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
-                {email.toLowerCase() === SUPER_ADMIN_EMAIL && (
-                  <span className="text-[10px] font-bold text-emerald-600 flex items-center space-x-1 mt-1">
-                    <ShieldCheck className="h-3 w-3" />
-                    <span>Super Admin Email Detected</span>
-                  </span>
-                )}
               </div>
 
               {isSignUp && (
@@ -241,26 +235,18 @@ export default function LoginModal({
           <div className="border-t border-slate-100 pt-3 space-y-2">
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block text-center">Quick Preset Logins</span>
             
-            <div className="grid grid-cols-3 gap-1.5 text-[10px]">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin(SUPER_ADMIN_EMAIL)}
-                className="p-1.5 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg text-purple-900 text-center truncate font-bold cursor-pointer"
-                title="Super Admin Aaron Ayemusa"
-              >
-                Super Admin
-              </button>
+            <div className="grid grid-cols-2 gap-2 text-[10px]">
               <button
                 type="button"
                 onClick={() => handleQuickLogin('agent@rentnaija.ng')}
-                className="p-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-emerald-900 text-center truncate font-bold cursor-pointer"
+                className="p-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-emerald-900 text-center truncate font-bold cursor-pointer"
               >
                 Landlord
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickLogin('tunde@gmail.com')}
-                className="p-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-blue-900 text-center truncate font-bold cursor-pointer"
+                className="p-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-blue-900 text-center truncate font-bold cursor-pointer"
               >
                 Customer
               </button>

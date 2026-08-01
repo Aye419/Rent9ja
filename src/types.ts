@@ -88,6 +88,7 @@ export interface UserProfile {
   badge: 'standard' | 'verified' | 'premium';
   avatar: string;
   companyName?: string;
+  state?: string;
   disabled?: boolean;
   createdAt?: string;
 }

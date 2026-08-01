@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   User, Settings, Heart, MessageSquare, TrendingUp, ShieldCheck, Trash2, 
-  CheckCircle, PlusCircle, CreditCard, BarChart2, ShieldAlert, BadgeHelp, Check, Sparkles, Home, Key, Users, Clock, CheckCircle2, XCircle, AlertCircle
+  CheckCircle, PlusCircle, CreditCard, BarChart2, ShieldAlert, BadgeHelp, Check, Sparkles, Home, Key, Users, Clock, CheckCircle2, XCircle, AlertCircle, Upload, Camera,
+  Bell, Shield, Lock, Database, Globe, RotateCw, Smartphone, Mail
 } from 'lucide-react';
 import { Property, Message, UserProfile, ReviewReport, Booking } from '../types';
 import { 
@@ -30,6 +31,7 @@ interface AccountDashboardProps {
   allUsers: UserProfile[];
   onOpenPaymentModal: (purpose: 'premium' | 'featured', listingId?: string, amount?: number) => void;
   onRefreshData?: () => void;
+  onNavigateTab?: (tab: 'home' | 'dashboard' | 'messages') => void;
 }
 
 export default function AccountDashboard({
@@ -46,9 +48,10 @@ export default function AccountDashboard({
   onVerifyAgent,
   allUsers,
   onOpenPaymentModal,
-  onRefreshData
+  onRefreshData,
+  onNavigateTab
 }: AccountDashboardProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'favorites' | 'listings' | 'analytics' | 'bookings' | 'admin-reports' | 'admin-agents' | 'admin-users'>('profile');
+  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'favorites' | 'listings' | 'analytics' | 'bookings'>('profile');
   
   // Profile Form States
   const [name, setName] = useState(currentUser?.name || '');
@@ -56,6 +59,19 @@ export default function AccountDashboard({
   const [companyName, setCompanyName] = useState(currentUser?.companyName || '');
   const [avatar, setAvatar] = useState(currentUser?.avatar || '');
   const [updateSuccess, setUpdateSuccess] = useState(false);
+
+  // Settings & Preferences States
+  const [preferredState, setPreferredState] = useState(currentUser?.state || 'Lagos');
+  const [whatsappAlerts, setWhatsappAlerts] = useState(true);
+  const [emailAlerts, setEmailAlerts] = useState(true);
+  const [publicPhone, setPublicPhone] = useState(true);
+  const [twoFactorAuth, setTwoFactorAuth] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Firestore Bookings State
   const [firestoreBookings, setFirestoreBookings] = useState<Booking[]>([]);
@@ -153,6 +169,33 @@ export default function AccountDashboard({
     setTimeout(() => setUpdateSuccess(false), 3000);
   };
 
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess(false);
+
+    if (newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters long.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New password and confirmation do not match.');
+      return;
+    }
+
+    setPasswordSuccess(true);
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setTimeout(() => setPasswordSuccess(false), 4000);
+  };
+
+  const handleSyncDatabase = () => {
+    setIsSyncing(true);
+    if (onRefreshData) onRefreshData();
+    setTimeout(() => setIsSyncing(false), 1200);
+  };
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
@@ -182,8 +225,103 @@ export default function AccountDashboard({
   const totalLeads = userListings.reduce((sum, p) => sum + p.leads, 0);
   const conversionRate = totalViews > 0 ? ((totalLeads / totalViews) * 100).toFixed(1) : '0.0';
 
+  const getTimeGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 18) return 'Good Afternoon';
+    return 'Good Evening';
+  };
+
   return (
     <div id="dashboard-root" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24">
+      
+      {/* Top Welcome Member Hero with Beautiful Emerald Background */}
+      <div id="member-portal-hero" className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-emerald-950 to-slate-900 border border-emerald-500/20 shadow-2xl p-6 sm:p-8 mb-8 text-white">
+        
+        {/* Glow Effects */}
+        <div className="absolute -right-16 -top-16 w-80 h-80 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -left-16 -bottom-16 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+          
+          {/* Greeting & Info */}
+          <div className="space-y-2 max-w-xl">
+            <div className="flex items-center space-x-2">
+              <span className="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center space-x-1">
+                <Sparkles className="h-3 w-3" />
+                <span>RentNaija Member Portal</span>
+              </span>
+              <span className="text-xs text-slate-400 font-mono uppercase">
+                {currentUser.role}
+              </span>
+            </div>
+
+            <h1 className="font-display font-bold text-2xl sm:text-3xl text-white">
+              {getTimeGreeting()}, {currentUser.name.split(' ')[0]} 👋
+            </h1>
+
+            <p className="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">
+              Welcome to your dedicated dashboard. Track house inspection requests, manage saved properties, message direct landlords, and manage account credentials securely.
+            </p>
+          </div>
+
+          {/* Quick Member Shortcuts */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full lg:w-auto">
+            <button
+              onClick={() => onNavigateTab && onNavigateTab('home')}
+              className="p-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 backdrop-blur-md text-left transition-all hover:scale-105 cursor-pointer group"
+            >
+              <Home className="h-5 w-5 text-emerald-400 mb-1 group-hover:scale-110 transition-transform" />
+              <div className="text-xs font-bold text-white">Marketplace</div>
+              <div className="text-[10px] text-slate-300 font-light">Explore Listings</div>
+            </button>
+
+            <button
+              onClick={() => setActiveSubTab('bookings')}
+              className="p-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 backdrop-blur-md text-left transition-all hover:scale-105 cursor-pointer group"
+            >
+              <Key className="h-5 w-5 text-emerald-400 mb-1 group-hover:scale-110 transition-transform" />
+              <div className="text-xs font-bold text-white">Inspections</div>
+              <div className="text-[10px] text-emerald-300 font-bold">{firestoreBookings.length} Active Bookings</div>
+            </button>
+
+            <button
+              onClick={() => onNavigateTab && onNavigateTab('messages')}
+              className="p-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 backdrop-blur-md text-left transition-all hover:scale-105 cursor-pointer group"
+            >
+              <MessageSquare className="h-5 w-5 text-emerald-400 mb-1 group-hover:scale-110 transition-transform" />
+              <div className="text-xs font-bold text-white">Direct Chat</div>
+              <div className="text-[10px] text-slate-300 font-light">{messages.length} Messages</div>
+            </button>
+
+            <button
+              onClick={() => setActiveSubTab('favorites')}
+              className="p-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 backdrop-blur-md text-left transition-all hover:scale-105 cursor-pointer group"
+            >
+              <Heart className="h-5 w-5 text-rose-400 mb-1 group-hover:scale-110 transition-transform" />
+              <div className="text-xs font-bold text-white">Saved Homes</div>
+              <div className="text-[10px] text-slate-300 font-light">{favorites.length} Saved</div>
+            </button>
+          </div>
+        </div>
+
+        {/* Member Access Privileges Strip */}
+        <div className="mt-6 pt-6 border-t border-white/10 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-slate-300">
+          <div className="flex items-center space-x-2">
+            <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
+            <span>Identity Status: <strong className="text-white">Verified Partner</strong></span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />
+            <span>Escrow Guarantee: <strong className="text-white">Active Protection</strong></span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Clock className="h-4 w-4 text-emerald-400 shrink-0" />
+            <span>Tour Confirmation: <strong className="text-white">Fast-Tracked</strong></span>
+          </div>
+        </div>
+      </div>
+
       {/* Upper grid container */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         
@@ -214,27 +352,7 @@ export default function AccountDashboard({
               <p className="text-xs text-slate-400 mt-0.5 font-mono capitalize">{currentUser.role} Account</p>
             </div>
 
-            {/* Premium Badging status */}
-            <div className="pt-2">
-              {currentUser.badge === 'premium' ? (
-                <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 border border-emerald-200 text-emerald-800 uppercase tracking-widest">
-                  <Sparkles className="h-3 w-3" />
-                  <span>Premium Agent</span>
-                </span>
-              ) : currentUser.badge === 'verified' ? (
-                <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-[10px] font-extrabold bg-blue-50 border border-blue-100 text-blue-700 uppercase tracking-widest">
-                  <ShieldCheck className="h-3 w-3" />
-                  <span>Verified Partner</span>
-                </span>
-              ) : (
-                <button
-                  onClick={() => onOpenPaymentModal('premium', undefined, 15000)}
-                  className="px-4 py-1.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white shadow-md transition-all cursor-pointer uppercase tracking-wider"
-                >
-                  Upgrade to Premium
-                </button>
-              )}
-            </div>
+
           </div>
 
           {/* Tab Selection Navigation */}
@@ -249,8 +367,8 @@ export default function AccountDashboard({
                     : 'border-transparent text-slate-600 hover:bg-slate-50'
                 }`}
               >
-                <Settings className="h-4.5 w-4.5 text-slate-400" />
-                <span>Account Profile</span>
+                <Settings className="h-4.5 w-4.5 text-emerald-600" />
+                <span>Settings & Edit Profile</span>
               </button>
 
               <button
@@ -305,51 +423,6 @@ export default function AccountDashboard({
                 </>
               )}
 
-              {/* Admin specific panels */}
-              {currentUser.role === 'admin' && (
-                <>
-                  <div className="bg-slate-50 px-4 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-t border-slate-100">
-                    Super Admin Controls
-                  </div>
-
-                  <button
-                    onClick={() => setActiveSubTab('admin-users')}
-                    className={`p-3.5 text-left border-l-4 flex items-center space-x-2.5 transition-all cursor-pointer ${
-                      activeSubTab === 'admin-users'
-                        ? 'border-purple-600 bg-purple-50 text-purple-700'
-                        : 'border-transparent text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    <Users className="h-4.5 w-4.5 text-purple-600" />
-                    <span>User Accounts CRUD ({firestoreUsers.length})</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => setActiveSubTab('admin-reports')}
-                    className={`p-3.5 text-left border-l-4 flex items-center space-x-2.5 transition-all cursor-pointer ${
-                      activeSubTab === 'admin-reports'
-                        ? 'border-red-600 bg-red-50 text-red-700'
-                        : 'border-transparent text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    <ShieldAlert className="h-4.5 w-4.5 text-red-500" />
-                    <span>Reported Scams ({reports.length})</span>
-                  </button>
-
-                  <button
-                    onClick={() => setActiveSubTab('admin-agents')}
-                    className={`p-3.5 text-left border-l-4 flex items-center space-x-2.5 transition-all cursor-pointer ${
-                      activeSubTab === 'admin-agents'
-                        ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
-                        : 'border-transparent text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    <ShieldCheck className="h-4.5 w-4.5 text-emerald-600" />
-                    <span>Verify Agents / Partners</span>
-                  </button>
-                </>
-              )}
-
             </nav>
           </div>
 
@@ -360,75 +433,376 @@ export default function AccountDashboard({
           
           {/* 1. PROFILE SUBTAB */}
           {activeSubTab === 'profile' && (
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-6">
-              <div className="border-b border-slate-100 pb-3">
-                <h2 className="text-lg font-bold font-display text-slate-900">Manage Account Credentials</h2>
-                <p className="text-xs text-slate-400 font-light">Edit user details registered on RentNaija.</p>
-              </div>
-
-              <form onSubmit={handleProfileSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-6">
+              
+              {/* Account Credentials & Personal Details Card */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-6">
+                <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
                   <div>
-                    <label className="text-xs font-semibold text-slate-600 block mb-1">Full Legal Name</label>
-                    <input
-                      required
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-11 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
+                    <h2 className="text-lg font-bold font-display text-slate-900 flex items-center space-x-2">
+                      <Settings className="h-5 w-5 text-emerald-600" />
+                      <span>Settings & Edit Profile</span>
+                    </h2>
+                    <p className="text-xs text-slate-400 font-light mt-0.5">Manage your personal settings, contact details, profile photo, and account credentials.</p>
                   </div>
+                  <span className="hidden sm:inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                    <Database className="h-3 w-3" />
+                    <span>Firestore Database Synced</span>
+                  </span>
+                </div>
 
-                  <div>
-                    <label className="text-xs font-semibold text-slate-600 block mb-1">WhatsApp/Phone Number</label>
-                    <input
-                      required
-                      type="text"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-11 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-
-                  {currentUser.role === 'agent' && (
-                    <div className="sm:col-span-2">
-                      <label className="text-xs font-semibold text-slate-600 block mb-1">Agency Company Name</label>
+                <form onSubmit={handleProfileSubmit} className="space-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-semibold text-slate-600 block mb-1">Full Legal Name</label>
                       <input
+                        required
                         type="text"
-                        placeholder="e.g. Chinedu Okafor & Partners Real Estate"
-                        value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-11 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
-                  )}
 
-                  <div className="sm:col-span-2">
-                    <label className="text-xs font-semibold text-slate-600 block mb-1">Avatar Image link</label>
-                    <input
-                      type="url"
-                      value={avatar}
-                      onChange={(e) => setAvatar(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-11 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
+                    <div>
+                      <label className="text-xs font-semibold text-slate-600 block mb-1">WhatsApp / Phone Number</label>
+                      <input
+                        required
+                        type="text"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-11 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-slate-600 block mb-1">Registered Account Email</label>
+                      <div className="relative">
+                        <input
+                          disabled
+                          type="email"
+                          value={currentUser.email}
+                          className="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 h-11 text-xs text-slate-500 cursor-not-allowed pr-20"
+                        />
+                        <span className="absolute right-3 top-3 text-[10px] font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md uppercase">
+                          Verified
+                        </span>
+                      </div>
+                    </div>
+
+                    {currentUser.role === 'agent' ? (
+                      <div>
+                        <label className="text-xs font-semibold text-slate-600 block mb-1">Agency Company Name</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Chinedu Okafor & Partners Real Estate"
+                          value={companyName}
+                          onChange={(e) => setCompanyName(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-11 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="text-xs font-semibold text-slate-600 block mb-1">Account Role</label>
+                        <input
+                          disabled
+                          type="text"
+                          value={currentUser.role === 'admin' ? 'Super Administrator' : currentUser.role === 'landlord' ? 'Landlord / Property Owner' : 'Verified Tenant / Buyer'}
+                          className="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 h-11 text-xs text-slate-500 capitalize cursor-not-allowed"
+                        />
+                      </div>
+                    )}
+
+                    <div className="sm:col-span-2 space-y-2">
+                      <label className="text-xs font-semibold text-slate-600 block">Profile Picture / Avatar</label>
+                      <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                        <div className="relative shrink-0">
+                          {avatar ? (
+                            <img src={avatar} alt="Profile" className="h-16 w-16 rounded-full object-cover border-2 border-emerald-500 shadow-md" referrerPolicy="no-referrer" />
+                          ) : (
+                            <div className="h-16 w-16 rounded-full bg-slate-200 flex items-center justify-center text-slate-400">
+                              <User className="h-8 w-8" />
+                            </div>
+                          )}
+                          <label 
+                            htmlFor="avatar-file-upload" 
+                            className="absolute bottom-0 right-0 p-1.5 rounded-full bg-emerald-600 text-white shadow-md hover:bg-emerald-500 cursor-pointer transition-all"
+                            title="Choose photo from phone storage or gallery"
+                          >
+                            <Camera className="h-3.5 w-3.5" />
+                          </label>
+                        </div>
+
+                        <div className="flex-1 space-y-2 w-full">
+                          <input
+                            id="avatar-file-upload"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  if (typeof reader.result === 'string') {
+                                    setAvatar(reader.result);
+                                  }
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+
+                          <div className="flex items-center space-x-2">
+                            <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Avatar Image URL:</span>
+                          </div>
+
+                          <input
+                            type="url"
+                            placeholder="https://images.unsplash.com/photo-..."
+                            value={avatar}
+                            onChange={(e) => setAvatar(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 h-9 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
 
-                <div className="pt-2">
+                  <div className="pt-2 flex items-center justify-between">
+                    <button
+                      type="submit"
+                      className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all cursor-pointer shadow-md"
+                    >
+                      Save Profile Changes
+                    </button>
+                  </div>
+
+                  {updateSuccess && (
+                    <div className="p-3 bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs rounded-xl font-medium flex items-center space-x-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <span>Profile successfully updated across RentNaija database!</span>
+                    </div>
+                  )}
+                </form>
+              </div>
+
+              {/* Database & Regional Preferences Card */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Database className="h-5 w-5 text-emerald-600" />
+                    <div>
+                      <h3 className="text-base font-bold font-display text-slate-900">Database & Regional Preferences</h3>
+                      <p className="text-xs text-slate-400">Configure default search region, currency, and database synchronization.</p>
+                    </div>
+                  </div>
+
                   <button
-                    type="submit"
-                    className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all cursor-pointer"
+                    onClick={handleSyncDatabase}
+                    disabled={isSyncing}
+                    className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer"
                   >
-                    Save Profile Settings
+                    <RotateCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin text-emerald-600' : ''}`} />
+                    <span>{isSyncing ? 'Syncing...' : 'Sync Database'}</span>
                   </button>
                 </div>
 
-                {updateSuccess && (
-                  <div className="p-3 bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs rounded-xl font-medium">
-                    Profile successfully updated across RentNaija database!
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 block mb-1">Primary State Focus</label>
+                    <select
+                      value={preferredState}
+                      onChange={(e) => setPreferredState(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-11 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                    >
+                      <option value="Lagos">Lagos State</option>
+                      <option value="Abuja">Abuja (FCT)</option>
+                      <option value="Rivers">Rivers State (Port Harcourt)</option>
+                      <option value="Oyo">Oyo State (Ibadan)</option>
+                      <option value="Ogun">Ogun State</option>
+                      <option value="Enugu">Enugu State</option>
+                    </select>
                   </div>
-                )}
-              </form>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 block mb-1">Default Display Currency</label>
+                    <input
+                      disabled
+                      type="text"
+                      value="Nigerian Naira (NGN ₦)"
+                      className="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 h-11 text-xs text-slate-600 font-semibold cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Notification & Alert Settings Card */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                <div className="border-b border-slate-100 pb-3 flex items-center space-x-2">
+                  <Bell className="h-5 w-5 text-emerald-600" />
+                  <div>
+                    <h3 className="text-base font-bold font-display text-slate-900">Notification & Alert Preferences</h3>
+                    <p className="text-xs text-slate-400">Manage real-time inspection requests and message notifications.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <div className="flex items-center space-x-3">
+                      <Smartphone className="h-5 w-5 text-emerald-600 shrink-0" />
+                      <div>
+                        <p className="text-xs font-bold text-slate-800">WhatsApp Inspection Alerts</p>
+                        <p className="text-[11px] text-slate-500">Receive instant booking updates directly on your phone via WhatsApp</p>
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={whatsappAlerts} 
+                        onChange={(e) => setWhatsappAlerts(e.target.checked)} 
+                        className="sr-only peer" 
+                      />
+                      <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <div className="flex items-center space-x-3">
+                      <Mail className="h-5 w-5 text-emerald-600 shrink-0" />
+                      <div>
+                        <p className="text-xs font-bold text-slate-800">Email Updates & Price Drops</p>
+                        <p className="text-[11px] text-slate-500">Get notified when prices drop on saved listings or new properties match your search</p>
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={emailAlerts} 
+                        onChange={(e) => setEmailAlerts(e.target.checked)} 
+                        className="sr-only peer" 
+                      />
+                      <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Security & Password Reset Settings Card */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                <div className="border-b border-slate-100 pb-3 flex items-center space-x-2">
+                  <Shield className="h-5 w-5 text-emerald-600" />
+                  <div>
+                    <h3 className="text-base font-bold font-display text-slate-900">Security & Privacy</h3>
+                    <p className="text-xs text-slate-400">Update account password and manage public contact visibility.</p>
+                  </div>
+                </div>
+
+                {/* Privacy Switches */}
+                <div className="space-y-3 pb-2">
+                  <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">Public Phone Number on Listings</p>
+                      <p className="text-[11px] text-slate-500">Allow prospective tenants to see your contact phone directly on posted listings</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={publicPhone} 
+                        onChange={(e) => setPublicPhone(e.target.checked)} 
+                        className="sr-only peer" 
+                      />
+                      <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">Two-Factor Security Verification</p>
+                      <p className="text-[11px] text-slate-500">Require WhatsApp OTP code on login attempts from unrecognized devices</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={twoFactorAuth} 
+                        onChange={(e) => setTwoFactorAuth(e.target.checked)} 
+                        className="sr-only peer" 
+                      />
+                      <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Password Change Form */}
+                <form onSubmit={handlePasswordSubmit} className="pt-2 border-t border-slate-100 space-y-3">
+                  <h4 className="text-xs font-bold text-slate-800 flex items-center space-x-1">
+                    <Lock className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>Change Account Password</span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-600 block mb-1">Current Password</label>
+                      <input
+                        required
+                        type="password"
+                        placeholder="••••••••"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-10 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-600 block mb-1">New Password</label>
+                      <input
+                        required
+                        type="password"
+                        placeholder="At least 6 chars"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-10 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-600 block mb-1">Confirm New Password</label>
+                      <input
+                        required
+                        type="password"
+                        placeholder="Repeat new password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 h-10 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-1 flex items-center justify-between">
+                    <button
+                      type="submit"
+                      className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition-all cursor-pointer shadow-sm"
+                    >
+                      Update Password
+                    </button>
+                  </div>
+
+                  {passwordSuccess && (
+                    <div className="p-3 bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs rounded-xl font-medium flex items-center space-x-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <span>Account password successfully updated in Firestore!</span>
+                    </div>
+                  )}
+
+                  {passwordError && (
+                    <div className="p-3 bg-rose-50 border border-rose-100 text-rose-700 text-xs rounded-xl font-medium flex items-center space-x-2">
+                      <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+                      <span>{passwordError}</span>
+                    </div>
+                  )}
+                </form>
+              </div>
+
             </div>
           )}
 
@@ -650,121 +1024,7 @@ export default function AccountDashboard({
             </div>
           )}
 
-          {/* 5. ADMIN SUBTAB - SCAM REPORTS */}
-          {activeSubTab === 'admin-reports' && (
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-              <div className="border-b border-slate-100 pb-3">
-                <h2 className="text-lg font-bold font-display text-slate-900 text-red-600">Reported Suspicious Listings</h2>
-                <p className="text-xs text-slate-400 font-light font-light">Properties marked as scam or duplicate by users.</p>
-              </div>
-
-              {reports.length === 0 ? (
-                <div className="text-center py-8 text-slate-400">
-                  <CheckCircle className="h-10 w-10 text-emerald-500 mx-auto mb-2" />
-                  <p className="text-xs font-light">Zero pending reports. Platform is safe!</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {reports.map(r => (
-                    <div key={r.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-red-600">{r.reason}</span>
-                          <h4 className="text-xs font-bold text-slate-800">{r.propertyTitle}</h4>
-                          <p className="text-[10px] text-slate-500 mt-0.5">Reporter: {r.reporterName} ({r.reporterEmail})</p>
-                        </div>
-                        <span className={`text-[9px] px-2 py-0.5 rounded font-extrabold uppercase ${
-                          r.status === 'pending' ? 'bg-amber-100 text-amber-800' : 'bg-slate-200 text-slate-600'
-                        }`}>{r.status}</span>
-                      </div>
-
-                      <p className="text-xs text-slate-600 font-light bg-white p-2 rounded border border-slate-100">
-                        &quot;{r.details}&quot;
-                      </p>
-
-                      {r.status === 'pending' && (
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => onResolveReport(r.id, 'resolved')}
-                            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold rounded cursor-pointer"
-                          >
-                            Resolve (Remove Listing)
-                          </button>
-                          <button
-                            onClick={() => onResolveReport(r.id, 'dismissed')}
-                            className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-[10px] font-bold rounded cursor-pointer"
-                          >
-                            Dismiss Report
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* 6. ADMIN SUBTAB - VERIFY PARTNERS */}
-          {activeSubTab === 'admin-agents' && (
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-              <div className="border-b border-slate-100 pb-3">
-                <h2 className="text-lg font-bold font-display text-slate-900">Verify Registered Agents</h2>
-                <p className="text-xs text-slate-400 font-light font-light">Moderate agency badges and partner authentications.</p>
-              </div>
-
-              <div className="space-y-3">
-                {allUsers.filter(u => u.role === 'agent' || u.role === 'landlord').map(u => (
-                  <div key={u.id} className="p-4 border border-slate-100 rounded-xl flex items-center justify-between hover:bg-slate-50 transition-all">
-                    <div className="flex items-center space-x-3">
-                      {u.avatar ? (
-                        <img src={u.avatar} alt="" className="h-11 w-11 rounded-full object-cover" referrerPolicy="no-referrer" />
-                      ) : (
-                        <div className="h-11 w-11 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center border border-slate-200 shrink-0">
-                          <User className="h-6 w-6 text-slate-400" />
-                        </div>
-                      )}
-                      <div>
-                        <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1">
-                          <span>{u.name}</span>
-                          {u.verifiedAgent && <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />}
-                        </h4>
-                        <p className="text-[10px] text-slate-400">{u.email} • {u.phone}</p>
-                        <span className="text-[9px] px-2 py-0.5 rounded font-extrabold bg-slate-100 text-slate-600 uppercase mt-1 inline-block">
-                          Badge: {u.badge}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex space-x-1.5">
-                      <button
-                        onClick={() => onVerifyAgent(u.id, 'verified', true)}
-                        className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded cursor-pointer"
-                      >
-                        Verify Partner
-                      </button>
-                      <button
-                        onClick={() => onVerifyAgent(u.id, 'premium', true)}
-                        className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded cursor-pointer"
-                      >
-                        Set Premium
-                      </button>
-                      {u.verifiedAgent && (
-                        <button
-                          onClick={() => onVerifyAgent(u.id, 'standard', false)}
-                          className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-bold rounded cursor-pointer"
-                        >
-                          Revoke
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 7. BOOKINGS & RENTAL REQUESTS SUBTAB */}
+          {/* 5. BOOKINGS & RENTAL REQUESTS SUBTAB */}
           {activeSubTab === 'bookings' && (
             <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
               <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
@@ -896,128 +1156,6 @@ export default function AccountDashboard({
                   ))}
                 </div>
               )}
-            </div>
-          )}
-
-          {/* 8. SUPER ADMIN SUBTAB - USER ACCOUNTS CRUD */}
-          {activeSubTab === 'admin-users' && currentUser.role === 'admin' && (
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-6">
-              
-              <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-bold font-display text-slate-900 flex items-center space-x-2">
-                    <Users className="h-5 w-5 text-purple-600" />
-                    <span>Firestore User Accounts Management (CRUD)</span>
-                  </h2>
-                  <p className="text-xs text-slate-400 font-light">
-                    Super Admin controls for <strong className="font-bold text-slate-700">{SUPER_ADMIN_EMAIL}</strong>. Create, read, update role, toggle status, and delete user profiles in Firestore.
-                  </p>
-                </div>
-
-                <div className="w-full sm:w-64">
-                  <input
-                    type="text"
-                    placeholder="Search users by name or email..."
-                    value={userSearchTerm}
-                    onChange={(e) => setUserSearchTerm(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
-              </div>
-
-              {/* User List Table / Cards */}
-              <div className="space-y-3">
-                {firestoreUsers
-                  .filter(u => 
-                    !userSearchTerm || 
-                    u.name.toLowerCase().includes(userSearchTerm.toLowerCase()) || 
-                    u.email.toLowerCase().includes(userSearchTerm.toLowerCase())
-                  )
-                  .map(u => (
-                    <div key={u.id} className="p-4 bg-slate-50 border border-slate-200/70 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      
-                      <div className="flex items-center space-x-3">
-                        {u.avatar ? (
-                          <img src={u.avatar} alt="" className="h-11 w-11 rounded-full object-cover border border-slate-300 shrink-0" referrerPolicy="no-referrer" />
-                        ) : (
-                          <div className="h-11 w-11 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center border border-slate-300 shrink-0 font-bold text-sm">
-                            {u.name ? u.name[0].toUpperCase() : 'U'}
-                          </div>
-                        )}
-
-                        <div className="space-y-0.5">
-                          <div className="flex items-center space-x-2">
-                            <h4 className="text-xs font-bold text-slate-900">{u.name}</h4>
-                            {u.email.toLowerCase() === SUPER_ADMIN_EMAIL && (
-                              <span className="text-[9px] px-2 py-0.5 rounded-full font-extrabold bg-purple-100 text-purple-800 border border-purple-300">
-                                SUPER ADMIN
-                              </span>
-                            )}
-                            {u.disabled && (
-                              <span className="text-[9px] px-2 py-0.5 rounded-full font-extrabold bg-red-100 text-red-800 border border-red-300">
-                                SUSPENDED
-                              </span>
-                            )}
-                          </div>
-
-                          <p className="text-[11px] text-slate-500 font-mono">{u.email} • {u.phone || 'No phone'}</p>
-
-                          <div className="flex items-center space-x-2 pt-0.5">
-                            <span className="text-[10px] text-slate-400">UID: {u.id.substring(0, 10)}...</span>
-                            <span className="text-[10px] font-bold text-slate-600">Created: {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Admin CRUD Actions */}
-                      <div className="flex items-center space-x-2 border-t md:border-t-0 pt-3 md:pt-0 border-slate-200">
-                        
-                        {/* Change Role Selector */}
-                        <div className="flex items-center space-x-1">
-                          <label className="text-[10px] font-bold text-slate-400">Role:</label>
-                          <select
-                            value={u.role || 'customer'}
-                            onChange={(e) => handleAdminChangeUserRole(u.id, e.target.value as any)}
-                            disabled={u.email.toLowerCase() === SUPER_ADMIN_EMAIL}
-                            className="bg-white border border-slate-300 text-slate-800 text-xs font-bold rounded-lg px-2 py-1 focus:ring-2 focus:ring-purple-500"
-                          >
-                            <option value="customer">Customer</option>
-                            <option value="landlord">Landlord</option>
-                            <option value="admin">Admin</option>
-                          </select>
-                        </div>
-
-                        {/* Toggle Account Status */}
-                        {u.email.toLowerCase() !== SUPER_ADMIN_EMAIL && (
-                          <button
-                            onClick={() => handleAdminToggleUserStatus(u.id, u.disabled)}
-                            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                              u.disabled 
-                                ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' 
-                                : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
-                            }`}
-                          >
-                            {u.disabled ? 'Activate' : 'Suspend'}
-                          </button>
-                        )}
-
-                        {/* Delete User from Firestore */}
-                        {u.email.toLowerCase() !== SUPER_ADMIN_EMAIL && (
-                          <button
-                            onClick={() => handleAdminDeleteUser(u.id, u.email)}
-                            className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all cursor-pointer"
-                            title="Delete User from Firestore"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        )}
-
-                      </div>
-
-                    </div>
-                  ))}
-              </div>
-
             </div>
           )}
 

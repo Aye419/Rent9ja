@@ -131,10 +131,15 @@ app.get('/api/properties', (req, res) => {
     bathrooms,
     furnished,
     featured,
-    search
+    search,
+    category
   } = req.query;
 
   let filtered = properties.filter(p => p.approved);
+
+  if (category && category !== 'All') {
+    filtered = filtered.filter(p => p.propertyType?.toLowerCase() === (category as string).toLowerCase());
+  }
 
   if (featured === 'true') {
     filtered = filtered.filter(p => p.featured);

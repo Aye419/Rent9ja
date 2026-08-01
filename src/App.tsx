@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Heart, Share2, MapPin, Search, PlusCircle, User, Calculator, 
+  Heart, Share2, MapPin, Search, User, 
   MessageSquare, ShieldCheck, TrendingUp, Sparkles, Filter, Info, Bell 
 } from 'lucide-react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import ListingCard from './components/ListingCard';
 import ListingDetails from './components/ListingDetails';
-import AddListing from './components/AddListing';
 import AccountDashboard from './components/AccountDashboard';
 import Chatbot from './components/Chatbot';
-import Calculators from './components/Calculators';
 import PaymentsModal from './components/PaymentsModal';
 import LoginModal from './components/LoginModal';
 import MessagesInbox from './components/MessagesInbox';
@@ -19,7 +17,7 @@ import { categories, initialProperties } from './mockData';
 import { fetchAllUsersFromFirestore } from './lib/firebaseService';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'home' | 'list' | 'dashboard' | 'calculators' | 'messages'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'dashboard' | 'messages'>('home');
   const [activePropertyId, setActivePropertyId] = useState<string | null>(null);
   
   // Primary database state
@@ -194,6 +192,8 @@ export default function App() {
     localStorage.setItem('rentnaija_currentuser', JSON.stringify(user));
     triggerAlert('success', `Logged in successfully as ${user.name}`);
     fetchMetadata();
+    setActiveTab('dashboard');
+    setActivePropertyId(null);
   };
 
   const handleLogout = () => {
@@ -414,15 +414,17 @@ export default function App() {
             {!activePropertyId && (
               <Hero
                 onSearch={handleSearch}
-                categoriesList={categories}
+                categoriesList={categories.map(cat => {
+                  const count = properties.filter(p => p.propertyType?.toLowerCase() === cat.id.toLowerCase()).length;
+                  return { ...cat, count };
+                })}
                 activeCategory={activeCategory}
                 onSelectCategory={handleSelectCategory}
-                properties={properties.length > 0 ? properties : initialProperties}
+                properties={properties}
                 onSelectProperty={(id) => {
                   setActivePropertyId(id);
                   setActiveTab('home');
                 }}
-                onPostProperty={() => setActiveTab('list')}
               />
             )}
 
@@ -444,7 +446,7 @@ export default function App() {
                 onReport={handleReportListing}
               />
             ) : (
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+              <div id="listings-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
                 
                 {/* Result count & filters feedback */}
                 <div id="results-count-bar" className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
@@ -455,35 +457,50 @@ export default function App() {
                     </h2>
                     <p className="text-slate-400 text-xs font-light mt-0.5">Showing {filteredProperties.length} active listings matching filter.</p>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('list')}
-                    className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20 flex items-center space-x-2 transition-all cursor-pointer"
-                  >
-                    <PlusCircle className="h-4 w-4" />
-                    <span>+ Post Your Property</span>
-                  </button>
                 </div>
 
                 {/* Properties grid listings layout */}
                 {filteredProperties.length === 0 ? (
                   <div id="properties-empty-state" className="text-center py-16 bg-white border border-slate-100 rounded-3xl p-8 shadow-sm space-y-4">
                     <MapPin className="h-12 w-12 text-slate-300 mx-auto" />
-                    <h3 className="font-display font-bold text-lg text-slate-800">No properties match your filters</h3>
-                    <p className="text-sm text-slate-500 font-light max-w-sm mx-auto">
-                      Try expanding your price sliders or changing bedroom selections to locate general apartments across Lagos and Abuja.
-                    </p>
-                    <button
-                      onClick={() => handleSearch({
-                        state: 'All', city: 'All', area: '', propertyType: 'All',
-                        type: 'all', minPrice: '', maxPrice: '', bedrooms: 'Any',
-                        bathrooms: 'Any', furnished: 'Any'
-                      })}
-                      className="px-6 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md cursor-pointer"
-                    >
-                      Reset All Filters
-                    </button>
+                    {properties.length === 0 ? (
+                      <>
+                        <h3 className="font-display font-bold text-lg text-slate-800">No property listings posted yet</h3>
+                        <p className="text-sm text-slate-500 font-light max-w-sm mx-auto">
+                          Be the first agent or landlord to publish a verified property for rent or sale on RentNaija!
+                        </p>
+                        <button
+                          onClick={() => {
+                            if (!currentUser) {
+                              setShowLoginModal(true);
+                            } else {
+                              setActiveTab('dashboard');
+                            }
+                          }}
+                          className="px-6 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md cursor-pointer transition-all inline-flex items-center space-x-2"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          <span>Post First Property Listing</span>
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <h3 className="font-display font-bold text-lg text-slate-800">No properties match your filters</h3>
+                        <p className="text-sm text-slate-500 font-light max-w-sm mx-auto">
+                          Try expanding your price sliders or changing bedroom selections to locate general apartments across Lagos and Abuja.
+                        </p>
+                        <button
+                          onClick={() => handleSearch({
+                            state: 'All', city: 'All', area: '', propertyType: 'All',
+                            type: 'all', minPrice: '', maxPrice: '', bedrooms: 'Any',
+                            bathrooms: 'Any', furnished: 'Any'
+                          })}
+                          className="px-6 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md cursor-pointer"
+                        >
+                          Reset All Filters
+                        </button>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <div id="listings-grid-layout" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -510,25 +527,7 @@ export default function App() {
           </div>
         )}
 
-        {/* TABS 2: LIST PROPERTY SCREEN */}
-        {activeTab === 'list' && (
-          <AddListing
-            currentUser={currentUser}
-            onOpenLogin={() => setShowLoginModal(true)}
-            onPublish={handlePublishListing}
-            onSelectTab={(tab) => {
-              setActiveTab(tab as any);
-              setActivePropertyId(null);
-            }}
-          />
-        )}
-
-        {/* TABS 3: CALCULATORS SCREEN */}
-        {activeTab === 'calculators' && (
-          <Calculators />
-        )}
-
-        {/* TABS 4: MESSAGES INBOX SCREEN */}
+        {/* TABS 2: MESSAGES INBOX SCREEN */}
         {activeTab === 'messages' && (
           <MessagesInbox
             currentUser={currentUser}
@@ -563,6 +562,10 @@ export default function App() {
             allUsers={allUsers}
             onOpenPaymentModal={handleOpenPaymentModal}
             onRefreshData={fetchMetadata}
+            onNavigateTab={(tab) => {
+              setActiveTab(tab as any);
+              setActivePropertyId(null);
+            }}
           />
         )}
 

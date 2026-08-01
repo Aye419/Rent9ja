@@ -263,14 +263,7 @@ export default function AddListing({
                   <option value="apartment">Apartment</option>
                   <option value="duplex">Duplex</option>
                   <option value="bungalow">Bungalow</option>
-                  <option value="self-contain">Self-Contain</option>
-                  <option value="mini-flat">Mini Flat</option>
-                  <option value="shared">Shared Apartment</option>
-                  <option value="student">Student Housing</option>
-                  <option value="office">Office</option>
-                  <option value="shop">Shop</option>
-                  <option value="warehouse">Warehouse</option>
-                  <option value="land">Land</option>
+                  <option value="self-contain">Self-Contain (Sef Contain)</option>
                 </select>
               </div>
 

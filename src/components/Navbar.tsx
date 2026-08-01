@@ -1,10 +1,10 @@
 import React from 'react';
-import { Home, PlusCircle, User, Calculator, MessageSquare, ShieldCheck } from 'lucide-react';
+import { Home, User, MessageSquare, ShieldCheck } from 'lucide-react';
 import { UserProfile } from '../types';
 
 interface NavbarProps {
-  activeTab: 'home' | 'list' | 'dashboard' | 'calculators' | 'messages';
-  setActiveTab: (tab: 'home' | 'list' | 'dashboard' | 'calculators' | 'messages') => void;
+  activeTab: 'home' | 'dashboard' | 'messages';
+  setActiveTab: (tab: 'home' | 'dashboard' | 'messages') => void;
   currentUser: UserProfile | null;
   onLogout: () => void;
   onOpenLogin: () => void;
@@ -49,32 +49,6 @@ export default function Navbar({
             <Home className="h-4 w-4" />
             <span>Marketplace</span>
           </button>
-          
-          <button
-            id="nav-calculators-btn"
-            onClick={() => setActiveTab('calculators')}
-            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-1.5 ${
-              activeTab === 'calculators' 
-                ? 'bg-emerald-50 text-emerald-700' 
-                : 'text-slate-600 hover:text-emerald-600 hover:bg-slate-50'
-            }`}
-          >
-            <Calculator className="h-4 w-4" />
-            <span>Naija Calculators</span>
-          </button>
-
-          <button
-            id="nav-list-btn"
-            onClick={() => setActiveTab('list')}
-            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-1.5 ${
-              activeTab === 'list' 
-                ? 'bg-emerald-50 text-emerald-700' 
-                : 'text-slate-600 hover:text-emerald-600 hover:bg-slate-50'
-            }`}
-          >
-            <PlusCircle className="h-4 w-4" />
-            <span>List Property</span>
-          </button>
 
           {currentUser && (
             <button
@@ -94,18 +68,6 @@ export default function Navbar({
 
         {/* User Account / CTA */}
         <div id="nav-actions" className="flex items-center space-x-2.5 sm:space-x-3">
-          {/* High visibility + Post Property button */}
-          <button
-            id="nav-post-property-btn"
-            onClick={() => setActiveTab('list')}
-            className="px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20 flex items-center space-x-1.5 transition-all cursor-pointer shrink-0"
-            title="Post a new house or property listing"
-          >
-            <PlusCircle className="h-4 w-4" />
-            <span className="hidden sm:inline">+ Post Property</span>
-            <span className="sm:hidden">Post</span>
-          </button>
-
           {currentUser ? (
             <div id="nav-user-logged-in" className="flex items-center space-x-2 sm:space-x-3">
               <button
@@ -169,28 +131,6 @@ export default function Navbar({
         >
           <Home className="h-5 w-5" />
           <span className="text-[10px] mt-0.5 font-medium">Market</span>
-        </button>
-
-        <button
-          id="mob-nav-calculators"
-          onClick={() => setActiveTab('calculators')}
-          className={`flex flex-col items-center justify-center p-1.5 transition-all ${
-            activeTab === 'calculators' ? 'text-emerald-600' : 'text-slate-400'
-          }`}
-        >
-          <Calculator className="h-5 w-5" />
-          <span className="text-[10px] mt-0.5 font-medium">Calculators</span>
-        </button>
-
-        <button
-          id="mob-nav-list"
-          onClick={() => setActiveTab('list')}
-          className={`flex flex-col items-center justify-center p-1.5 transition-all ${
-            activeTab === 'list' ? 'text-emerald-600' : 'text-slate-400'
-          }`}
-        >
-          <PlusCircle className="h-5 w-5" />
-          <span className="text-[10px] mt-0.5 font-medium">List</span>
         </button>
 
         {currentUser && (
